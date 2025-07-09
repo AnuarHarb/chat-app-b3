@@ -3,9 +3,11 @@ import React, { useState, useEffect } from "react";
 import { Header } from "@/components/header";
 import { db } from "@/firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
+import { Card } from "@/components/card";
 
 export default function Chat() {
   const [conversations, setConversations] = useState([]);
+  const [activeConversations, setActiveConversations] = useState();
 
   useEffect(() => {
     onSnapshot(collection(db, "chats"), (snapshot) => {
@@ -17,16 +19,23 @@ export default function Chat() {
   return (
     <section>
       <Header />
+
       <section className="flex">
-        <aside className="w-[300px] h-[100vh] border-2 border-black p-2">
-          {conversations.map((conversation, index) => (
-            <div key={index} className="border-2 border-black">
-              <h3>{conversation.user.name.first}</h3>
-            </div>
+        <aside className="w-[300px] h-[100vh] border-2 border-black p-4">
+          {conversations.map((conversation) => (
+            <Card
+              key={conversation.id}
+              user={conversation.user}
+              clickHandler={() => setActiveConversations(conversation)}
+            />
           ))}
         </aside>
+
         <section className="border-2 border-black h-[100vh] w-full bg-slate-300">
-          {}
+          {activeConversations &&
+            activeConversations.messages.map((message, index) => (
+              <p key={index}>{message.text}</p>
+            ))}
         </section>
       </section>
     </section>

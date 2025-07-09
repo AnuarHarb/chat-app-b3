@@ -4,6 +4,8 @@ import { Header } from "@/components/header";
 import { Card } from "@/components/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "@/firebaseConfig";
 
 export default function Home() {
   const authUser = useAuth();
@@ -24,6 +26,16 @@ export default function Home() {
     getUsers();
   }, []);
 
+  const startConversation = async (user) => {
+    const conversation = {
+      messages: [],
+      user: user,
+    };
+
+    await addDoc(collection(db, "chats"), conversation);
+    router.push("/chat");
+  };
+
   if (!authUser) {
     return <p>Loading...</p>;
   }
@@ -34,7 +46,11 @@ export default function Home() {
       <h1 className="text-6xl text-center py-10">Chatea con quien quieras</h1>
       <section className="flex gap-4 p-10 flex-wrap justify-center">
         {users.map((user) => (
-          <Card key={user.login.uuid} user={user} />
+          <Card
+            key={user.login.uuid}
+            user={user}
+            clickHandler={() => startConversation(user)}
+          />
         ))}
       </section>
     </section>

@@ -1,9 +1,15 @@
 import React from "react";
 
-export const Card = ({ user }) => {
+export const Card = ({ user, clickHandler }) => {
   return (
-    <article className="shadow-2xl rounded-b-md flex w-[300px]">
-      <img src={user.picture.large} className="w-[150px]"></img>
+    <article
+      className="shadow-2xl rounded-b-md flex w-[300px]"
+      onClick={clickHandler}
+    >
+      <img
+        src={user.picture?.large ? user.picture.large : user.picture}
+        className="w-[150px]"
+      ></img>
       <div className="p-2">
         <h3>
           {user.name.first} {user.name.last}
