@@ -2,7 +2,7 @@
 import React from "react";
 import { auth } from "@/firebaseConfig";
 import { useRouter } from "next/navigation";
-import { signInWithPopup, GoogleAuthProvider, signOut } from "firebase/auth";
+import { signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 
 const Login = () => {
   const router = useRouter();
