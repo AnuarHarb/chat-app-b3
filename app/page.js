@@ -4,7 +4,7 @@ import { Header } from "@/components/header";
 import { Card } from "@/components/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 
 export default function Home() {
@@ -32,7 +32,8 @@ export default function Home() {
       user: user,
     };
 
-    await addDoc(collection(db, "chats"), conversation);
+    const docRef = await addDoc(collection(db, "chats"), conversation);
+    await updateDoc(docRef, { id: docRef.id });
     router.push("/chat");
   };
 

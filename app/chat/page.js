@@ -4,39 +4,38 @@ import { Header } from "@/components/header";
 import { db } from "@/firebaseConfig";
 import { collection, onSnapshot } from "firebase/firestore";
 import { Card } from "@/components/card";
+import { ChatPanel } from "@/components/chatPanel";
 
 export default function Chat() {
   const [conversations, setConversations] = useState([]);
-  const [activeConversations, setActiveConversations] = useState();
+  const [activeConversation, setActiveConversation] = useState();
 
   useEffect(() => {
-    onSnapshot(collection(db, "chats"), (snapshot) => {
+    const unsubscribe = onSnapshot(collection(db, "chats"), (snapshot) => {
       const chats = snapshot.docs.map((document) => document.data());
       setConversations(chats);
     });
+
+    return () => unsubscribe();
   }, []);
 
   return (
     <section>
       <Header />
-
       <section className="flex">
-        <aside className="w-[300px] h-[100vh] border-2 border-black p-4">
-          {conversations.map((conversation) => (
+        <aside className="w-[300px] h-[100vh] border-2 border-black flex flex-col gap-4">
+          {conversations.map((conversation, index) => (
             <Card
-              key={conversation.id}
+              key={index}
               user={conversation.user}
-              clickHandler={() => setActiveConversations(conversation)}
+              clickHandler={() => setActiveConversation(conversation)}
             />
           ))}
         </aside>
 
-        <section className="border-2 border-black h-[100vh] w-full bg-slate-300">
-          {activeConversations &&
-            activeConversations.messages.map((message, index) => (
-              <p key={index}>{message.text}</p>
-            ))}
-        </section>
+        <ChatPanel
+          activeConversation={activeConversation}
+        />
       </section>
     </section>
   );
