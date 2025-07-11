@@ -13,7 +13,6 @@ export default function Home() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    console.log(authUser);
     if (authUser === null) router.push("/login");
   }, [authUser]);
 

@@ -2,30 +2,38 @@
 import React, { useEffect, useState } from "react";
 import { updateDoc, doc, arrayUnion } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
+import { MessageBox } from "./messageBox";
+import { useRef } from "react";
 
 export const ChatPanel = ({ activeConversation }) => {
+  const messagesEndRef = useRef(null);
   const [inputMessage, setInputMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
 
   useEffect(() => {
     if (activeConversation) {
       setMessageList(activeConversation.messages);
+      scrollToBottom();
     }
   }, [activeConversation]);
 
   if (!activeConversation) {
     return (
-      <section className="flex justify-center items-center w-full h-[100vh]">
+      <section className="flex justify-center items-center w-full h-[calc(100vh-72px)]">
         <p>Seleccióna una chat para interactuar</p>
       </section>
     );
   }
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth'});
+  };
+
   const sendMessage = async () => {
     setInputMessage("");
     const completeMessage = {
       text: inputMessage,
-      sender: "me",
+      sender: 'me',
       date: Date.now(),
     };
 
@@ -37,28 +45,28 @@ export const ChatPanel = ({ activeConversation }) => {
   };
 
   return (
-    <section className="w-full h-[100vh] flex flex-col">
-      <header className="w-full bg-sky-800 p-3 text-white flex gap-2 items-center">
-        <img src={activeConversation.user.picture.large} />
-        <h3>{activeConversation.user.name.first}</h3>
+    <section className="flex flex-col relative grow h-[calc(100vh-72px)]">
+      <header className="w-full bg-sky-800 p-2 text-white flex gap-2 items-center">
+        <img className="rounded-md w-[80px]" src={activeConversation.user.picture.large} />
+        <h3 className="text-2xl">{activeConversation.user.name.first} {activeConversation.user.name.last}</h3>
       </header>
-      <section>
+      <section className="p-2 flex flex-col gap-2 overflow-y-scroll h-[calc(100vh-220px)]">
         {messageList.map((message, index) => (
-          <p key={index} className="text-3xl text-black">
-            {message.text}
-          </p>
+          <MessageBox key={index} message={message} />
         ))}
+        <div ref={messagesEndRef} />
       </section>
-      <footer>
+      <footer className="absolute bottom-0 p-2 pb-10 flex gap-2 bg-sky-800 flex left-0 right-0">
         <input
           type="text"
-          className="border-2 border-black"
+          className="grow p-2 border-2 border-black rounded-md bg-white"
           value={inputMessage}
           onChange={(event) => setInputMessage(event.target.value)}
+          onKeyDown={(event) => event.key === "Enter" && sendMessage()}
         />
         <button
           onClick={() => sendMessage()}
-          className="border-2 border-black cursor-pointer"
+          className="w-[100px] p-2 border-2 border-black cursor-pointer rounded-md bg-white"
         >
           Send
         </button>

@@ -1,4 +1,4 @@
-// // hooks / useUser.js;
+'use client'
 import React, { useState, useEffect } from "react";
 import { auth } from "@/firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
@@ -13,18 +13,3 @@ export function useAuth() {
 
   return authenticatedUser;
 }
-
-// import { useEffect, useState } from "react";
-// import { auth } from "@/firebaseConfig";
-// import { onAuthStateChanged } from "firebase/auth";
-
-// export function useAuth() {
-//   const [user, setUser] = useState();
-
-//   useEffect(() => {
-//     const unsubscribe = onAuthStateChanged(auth, setUser);
-//     return () => unsubscribe();
-//   }, []);
-
-//   return user;
-// }

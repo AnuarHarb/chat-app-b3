@@ -23,7 +23,7 @@ export default function Chat() {
     <section>
       <Header />
       <section className="flex">
-        <aside className="w-[300px] h-[100vh] border-2 border-black flex flex-col gap-4">
+        <aside className="w-[320px] h-[calc(100vh-72px)] overflow-y-scroll border-2 border-black flex flex-col gap-4">
           {conversations.map((conversation, index) => (
             <Card
               key={index}
@@ -40,18 +40,3 @@ export default function Chat() {
     </section>
   );
 }
-
-// const chat = {
-//   user: {
-//     first: 'Jenny',
-//     last: 'Horsman',
-//     picture: "https://randomuser.me/api/portraits/med/men/75.jpg"
-//   },
-//   messages: [
-//     {
-//       text: "hola!",
-//       date: "19-07-2025-18:00:00",
-//       sender: "me"
-//     }
-//   ]
-// }
