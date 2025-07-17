@@ -18,9 +18,17 @@ export const ChatPanel = ({ activeConversation }) => {
   useEffect(() => {
     if (activeConversation) {
       setMessageList(activeConversation.messages);
-      scrollToBottom();
     }
   }, [activeConversation]);
+
+  useEffect(() => {
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    };
+    console.log(messageList);
+
+    scrollToBottom();
+  }, [messageList]);
 
   if (!activeConversation) {
     return (
@@ -29,10 +37,6 @@ export const ChatPanel = ({ activeConversation }) => {
       </section>
     );
   }
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
 
   const sendMessage = async () => {
     if (file) {
@@ -76,11 +80,11 @@ export const ChatPanel = ({ activeConversation }) => {
 
     const completeGeminiMessage = {
       text: geminiMessage,
-      sender: "gemini",
+      sender: activeConversation.user.name.first,
       date: Date.now(),
     };
 
-    setMessageList((prev) => [...prev, geminiMessage]);
+    setMessageList((prev) => [...prev, completeGeminiMessage]);
 
     await updateDoc(doc(db, "chats", activeConversation.id), {
       messages: arrayUnion(completeGeminiMessage),
