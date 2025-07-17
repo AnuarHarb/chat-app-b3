@@ -1,17 +1,19 @@
 "useClient";
 import React, { useEffect, useState } from "react";
+import { GoogleGenAI } from "@google/genai";
 import { updateDoc, doc, arrayUnion } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/firebaseConfig";
 import { MessageBox } from "./messageBox";
 import { useRef } from "react";
 
+const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+
 export const ChatPanel = ({ activeConversation }) => {
   const messagesEndRef = useRef(null);
   const [inputMessage, setInputMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
   const [file, setFile] = useState(null);
-  console.log(file);
 
   useEffect(() => {
     if (activeConversation) {
@@ -57,7 +59,7 @@ export const ChatPanel = ({ activeConversation }) => {
 
     if (!inputMessage) return;
 
-    setInputMessage("");
+    // Send User Message
     const completeMessage = {
       text: inputMessage,
       sender: "me",
@@ -69,6 +71,31 @@ export const ChatPanel = ({ activeConversation }) => {
     await updateDoc(doc(db, "chats", activeConversation.id), {
       messages: arrayUnion(completeMessage),
     });
+    // Send Gemini Message
+    const geminiMessage = await geminiResponse(inputMessage);
+
+    const completeGeminiMessage = {
+      text: geminiMessage,
+      sender: "gemini",
+      date: Date.now(),
+    };
+
+    setMessageList((prev) => [...prev, geminiMessage]);
+
+    await updateDoc(doc(db, "chats", activeConversation.id), {
+      messages: arrayUnion(completeGeminiMessage),
+    });
+
+    setInputMessage("");
+  };
+
+  const geminiResponse = async (prompt) => {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+    console.log(response.text);
+    return response.text;
   };
 
   return (
