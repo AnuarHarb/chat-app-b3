@@ -1,11 +1,10 @@
 "useClient";
-import React, { useEffect, useState } from "react";
-import { GoogleGenAI } from "@google/genai";
+import React, { useEffect, useState, useRef } from "react";
+import { GoogleGenAI, Type } from "@google/genai";
 import { updateDoc, doc, arrayUnion } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "@/firebaseConfig";
 import { MessageBox } from "./messageBox";
-import { useRef } from "react";
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
@@ -29,6 +28,19 @@ export const ChatPanel = ({ activeConversation }) => {
         model: "gemini-2.5-flash",
         config: {
           systemInstruction: `Eres ${activeConversation.user.name.first}, una persona de ${activeConversation.user.location.city} y estas en una conversación conmigo a través de una plataforma de chat y quiero que me respondas de manera breve en máximo un parrafo.`,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              message: {
+                type: Type.STRING,
+              },
+              mood: {
+                type: Type.STRING,
+                enum: ["sad", "happy", "angry"],
+              },
+            },
+          },
         },
         history: messageList.map((message) => ({
           role: message.sender === "me" ? "user" : "model",
@@ -97,12 +109,15 @@ export const ChatPanel = ({ activeConversation }) => {
 
     // Send Gemini Message
     setLoader(true);
-    const geminiMessage = await geminiResponse(completeMessage.text);
+    const { message: geminiMessage, mood } = await geminiResponse(
+      completeMessage.text
+    );
 
     const completeGeminiMessage = {
       text: geminiMessage,
       sender: activeConversation.user.name.first,
       date: Date.now(),
+      mood: mood,
     };
 
     setMessageList((prev) => [...prev, completeGeminiMessage]);
@@ -115,8 +130,7 @@ export const ChatPanel = ({ activeConversation }) => {
 
   const geminiResponse = async (prompt) => {
     const response = await chat.sendMessage({ message: prompt });
-    console.log(response.text);
-    return response.text;
+    return JSON.parse(response.text);
   };
 
   return (
@@ -138,7 +152,7 @@ export const ChatPanel = ({ activeConversation }) => {
         {loader && <p className="pb-20">Escribiendo Mensaje...</p>}
         <div ref={messagesEndRef} />
       </section>
-      <footer className="absolute bottom-0 p-2 pb-10 flex gap-2 bg-sky-800 flex left-0 right-0">
+      <footer className="absolute bottom-0 p-2 pb-10 gap-2 bg-sky-800 flex left-0 right-0">
         <input
           type="text"
           className="grow p-2 border-2 border-black rounded-md bg-white"
