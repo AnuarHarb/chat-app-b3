@@ -14,12 +14,30 @@ export const ChatPanel = ({ activeConversation }) => {
   const [inputMessage, setInputMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
   const [file, setFile] = useState(null);
+  const [loader, setLoader] = useState(false);
+  const [chat, setChat] = useState();
 
   useEffect(() => {
     if (activeConversation) {
       setMessageList(activeConversation.messages);
     }
   }, [activeConversation]);
+
+  useEffect(() => {
+    if (activeConversation && messageList) {
+      const chatSession = ai.chats.create({
+        model: "gemini-2.5-flash",
+        config: {
+          systemInstruction: `Eres ${activeConversation.user.name.first}, una persona de ${activeConversation.user.location.city} y estas en una conversación conmigo a través de una plataforma de chat y quiero que me respondas de manera breve en máximo un parrafo.`,
+        },
+        history: messageList.map((message) => ({
+          role: message.sender === "me" ? "user" : "model",
+          parts: [{ text: message.text }],
+        })),
+      });
+      setChat(chatSession);
+    }
+  }, [messageList]);
 
   useEffect(() => {
     const scrollToBottom = () => {
@@ -70,13 +88,16 @@ export const ChatPanel = ({ activeConversation }) => {
       date: Date.now(),
     };
 
+    setInputMessage("");
     setMessageList((prev) => [...prev, completeMessage]);
 
     await updateDoc(doc(db, "chats", activeConversation.id), {
       messages: arrayUnion(completeMessage),
     });
+
     // Send Gemini Message
-    const geminiMessage = await geminiResponse(inputMessage);
+    setLoader(true);
+    const geminiMessage = await geminiResponse(completeMessage.text);
 
     const completeGeminiMessage = {
       text: geminiMessage,
@@ -85,19 +106,15 @@ export const ChatPanel = ({ activeConversation }) => {
     };
 
     setMessageList((prev) => [...prev, completeGeminiMessage]);
+    setLoader(false);
 
     await updateDoc(doc(db, "chats", activeConversation.id), {
       messages: arrayUnion(completeGeminiMessage),
     });
-
-    setInputMessage("");
   };
 
   const geminiResponse = async (prompt) => {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
+    const response = await chat.sendMessage({ message: prompt });
     console.log(response.text);
     return response.text;
   };
@@ -118,6 +135,7 @@ export const ChatPanel = ({ activeConversation }) => {
         {messageList.map((message, index) => (
           <MessageBox key={index} message={message} />
         ))}
+        {loader && <p className="pb-20">Escribiendo Mensaje...</p>}
         <div ref={messagesEndRef} />
       </section>
       <footer className="absolute bottom-0 p-2 pb-10 flex gap-2 bg-sky-800 flex left-0 right-0">
